@@ -1,6 +1,6 @@
+import User from '../models/User'
 import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth.middleware'
-import User from '../models/User'
 
 export const getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

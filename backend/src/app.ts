@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import authRoutes from "./routes/auth.routes";
+import expenseRoutes from "./routes/expense.route";
 import dashboardRoutes from "./routes/dashboard.routes";
 
 const app = express();
@@ -19,6 +20,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/expenses", expenseRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use((_req, res) => {
