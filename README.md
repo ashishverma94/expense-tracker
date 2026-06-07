@@ -12,7 +12,7 @@ React (Vite + TS + Tailwind + MUI) frontend with an Express + MongoDB backend.
 >
 > Use these credentials to instantly explore the dashboard with real expense data or create a new account.
 >
-> 👉 [Open the app](https://expense-tracker-zeta-opal-56.vercel.app)
+> 👉 <a href="https://expense-tracker-zeta-opal-56.vercel.app" target="_blank" rel="noopener noreferrer">Open the app</a>
 
 ## Setup
 
