@@ -1,5 +1,5 @@
 import { Chart } from "chart.js";
-import { Expense } from "@/data/data";
+import { Expense } from "@/types/type";
 import { fmt } from "@/utils/functions";
 import { useEffect, useRef } from "react";
 import { CATEGORY_COLORS } from "@/utils/list";

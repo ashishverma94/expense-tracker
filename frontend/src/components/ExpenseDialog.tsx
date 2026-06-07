@@ -12,7 +12,7 @@ import {
   DialogActions,
   FormHelperText,
 } from "@mui/material";
-import { Expense } from "@/data/data";
+import { Expense } from "@/types/type";
 import { CATEGORIES } from "@/utils/list";
 import { Close } from "@mui/icons-material";
 import { useEffect, useState } from "react";

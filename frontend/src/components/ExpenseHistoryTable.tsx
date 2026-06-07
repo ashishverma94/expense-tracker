@@ -1,4 +1,4 @@
-import { Expense } from "@/data/data";
+import { Expense } from "@/types/type";
 import { fmt } from "@/utils/functions";
 import { useTheme } from "@/context/ThemeContext";
 import { CATEGORIES, CATEGORY_COLORS } from "@/utils/list";

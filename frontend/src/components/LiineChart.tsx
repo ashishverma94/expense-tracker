@@ -1,5 +1,5 @@
 import { Chart } from "chart.js";
-import { Expense } from "@/data/data";
+import { Expense } from "@/types/type";
 import { useEffect, useRef } from "react";
 import { monthLabel } from "@/utils/functions";
 

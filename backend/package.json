@@ -1,5 +1,5 @@
 {
-  "name": "auth-backend",
+  "name": "expense-tracker-backend",
   "version": "1.0.0",
   "description": "Express + MongoDB auth API",
   "main": "dist/server.js",

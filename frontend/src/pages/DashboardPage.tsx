@@ -4,6 +4,8 @@ import {
   TrendingUp,
   CalendarMonth,
   AccountBalanceWallet,
+  HourglassEmpty,
+  ReceiptLong,
 } from "@mui/icons-material";
 import {
   getExpenses,
@@ -11,7 +13,7 @@ import {
   deleteExpense,
   updateExpense,
 } from "@/api/expense";
-import { Expense } from "@/data/data";
+import { Expense } from "@/types/type";
 import { Button } from "@mui/material";
 import Navbar from "@/components/Navbar";
 import StatCard from "@/components/StatCard";
@@ -23,6 +25,7 @@ import { fmt, monthLabel } from "@/utils/functions";
 import { useState, useMemo, useEffect } from "react";
 import DeleteDialog from "@/components/DeleteDialog";
 import ExpenseDialog from "@/components/ExpenseDialog";
+import { useSnackbar } from "@/context/SnackbarContext";
 import { CATEGORIES, CATEGORY_COLORS } from "@/utils/list";
 import ExpenseHistoryTable from "@/components/ExpenseHistoryTable";
 import DashboardSkeleton from "@/components/skeletons/DashboardSkeleton";
@@ -36,6 +39,7 @@ type ExpenseForm = Pick<
 
 export default function DashboardPage() {
   const { resolved } = useTheme();
+  const { showSnackbar } = useSnackbar();
   const isDark = resolved === "dark";
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,28 +101,41 @@ export default function DashboardPage() {
     try {
       if (editTarget?._id) {
         const updated = await updateExpense(editTarget._id, expense);
+
         setExpenses((prev) =>
           prev.map((e) => (e._id === updated._id ? updated : e)),
         );
+
+        showSnackbar("Expense updated successfully", "success");
       } else {
         const created = await createExpense(expense);
         setExpenses((prev) => [created, ...prev]);
+        showSnackbar("Expense added successfully", "success");
       }
+
       setEditTarget(null);
       setAddOpen(false);
     } catch (err) {
       console.error(err);
+
+      showSnackbar(
+        editTarget ? "Failed to update expense" : "Failed to create expense",
+        "error",
+      );
     }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget?._id) return;
+
     try {
       await deleteExpense(deleteTarget._id);
       setExpenses((prev) => prev.filter((e) => e._id !== deleteTarget._id));
       setDeleteTarget(null);
+      showSnackbar("Expense deleted successfully", "success");
     } catch (err) {
       console.error(err);
+      showSnackbar("Failed to delete expense", "error");
     }
   };
 
@@ -263,108 +280,126 @@ export default function DashboardPage() {
                 Where money goes
               </p>
               <div className="h-56">
-                <PieChart data={expenses} isDark={isDark} />
-              </div>
-            </div>
-          </div>
-
-          {/* Recent + Category bars */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div
-              className={`${card} lg:col-span-2`}
-              style={{ boxShadow: shadow }}
-            >
-              <h2
-                className={`text-sm font-semibold mb-4 ${isDark ? "text-gray-50" : "text-gray-900"}`}
-              >
-                Recent Transactions
-              </h2>
-              <div className="space-y-1.5">
-                {recent5.map((e) => (
-                  <div
-                    key={e._id}
-                    className={`flex items-center justify-between py-2 px-3 rounded-xl ${
-                      isDark ? "bg-white/[0.03]" : "bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
-                        style={{
-                          background: CATEGORY_COLORS[e.category] || "#94a3b8",
-                        }}
-                      >
-                        {e.category.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <p
-                          className={`text-sm font-medium truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}
-                        >
-                          {e.title}
-                        </p>
-                        <p
-                          className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                        >
-                          {e.category} ·{" "}
-                          {new Date(e.expenseDate).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-semibold text-red-500 flex-shrink-0 ml-2">
-                      -{fmt(e.amount)}
-                    </span>
+                {!expenses || expenses.length === 0 ? (
+                  <div className="w-full h-full flex justify-center flex-col items-center text-xs md:text-sm">
+                    <ReceiptLong
+                      sx={{
+                        fontSize: { xs: 28, md: 34 },
+                        mb: 1,
+                      }}
+                    />
+                    No Expenses
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={card} style={{ boxShadow: shadow }}>
-              <h2
-                className={`text-sm font-semibold mb-4 ${isDark ? "text-gray-50" : "text-gray-900"}`}
-              >
-                Category Summary
-              </h2>
-              <div className="space-y-3">
-                {CATEGORIES.map((cat) => {
-                  const total = expenses
-                    .filter((e) => e.category === cat)
-                    .reduce((s, e) => s + e.amount, 0);
-                  if (!total) return null;
-                  const pct = Math.round((total / totalExpenses) * 100);
-                  return (
-                    <div key={cat}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span
-                          className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                        >
-                          {cat}
-                        </span>
-                        <span
-                          className={`text-xs font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}
-                        >
-                          {fmt(total)}
-                        </span>
-                      </div>
-                      <div
-                        className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/[0.08]" : "bg-gray-100"}`}
-                      >
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${pct}%`,
-                            background: CATEGORY_COLORS[cat],
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                ) : (
+                  <PieChart data={expenses} isDark={isDark} />
+                )}
               </div>
             </div>
           </div>
+
+          {/* Recent and Category bars */}
+          {recent5 && recent5.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div
+                className={`${card} lg:col-span-2`}
+                style={{ boxShadow: shadow }}
+              >
+                <h2
+                  className={`text-sm font-semibold mb-4 ${isDark ? "text-gray-50" : "text-gray-900"}`}
+                >
+                  Recent Transactions
+                </h2>
+                <div className="space-y-1.5">
+                  {recent5.map((e) => (
+                    <div
+                      key={e._id}
+                      className={`flex items-center justify-between py-2 px-3 rounded-xl ${
+                        isDark ? "bg-white/[0.03]" : "bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
+                          style={{
+                            background:
+                              CATEGORY_COLORS[e.category] || "#94a3b8",
+                          }}
+                        >
+                          {e.category.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className={`text-sm font-medium truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}
+                          >
+                            {e.title}
+                          </p>
+                          <p
+                            className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                          >
+                            {e.category} ·{" "}
+                            {new Date(e.expenseDate).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "numeric",
+                                month: "short",
+                              },
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold text-red-500 flex-shrink-0 ml-2">
+                        -{fmt(e.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={card} style={{ boxShadow: shadow }}>
+                <h2
+                  className={`text-sm font-semibold mb-4 ${isDark ? "text-gray-50" : "text-gray-900"}`}
+                >
+                  Category Summary
+                </h2>
+                <div className="space-y-3">
+                  {CATEGORIES.map((cat) => {
+                    const total = expenses
+                      .filter((e) => e.category === cat)
+                      .reduce((s, e) => s + e.amount, 0);
+                    if (!total) return null;
+                    const pct = Math.round((total / totalExpenses) * 100);
+                    return (
+                      <div key={cat}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span
+                            className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                          >
+                            {cat}
+                          </span>
+                          <span
+                            className={`text-xs font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}
+                          >
+                            {fmt(total)}
+                          </span>
+                        </div>
+                        <div
+                          className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/[0.08]" : "bg-gray-100"}`}
+                        >
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${pct}%`,
+                              background: CATEGORY_COLORS[cat],
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           <ExpenseHistoryTable
             expenses={expenses}
